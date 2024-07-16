@@ -6,7 +6,7 @@ This file is a basic program to keep track of the patients of a pet shelter. Thi
 
 Author: Aleksandar Kostadinov
 Github: Robbin-Banx
-edx: a-kostadinov
+
 Location: Sofia, Bulgaria
 Date: 10.06.2024
 
