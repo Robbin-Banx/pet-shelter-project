@@ -1,12 +1,9 @@
 
 # Pet Shelter Registry
-#### Video Demo: https://youtu.be/MDGXtWA3-iU
 
 *Author: Aleksandar Kostadinov
 
 *Github: Robbin-Banx
-
-*edx: a-kostadinov
 
 *Location: Sofia, Bulgaria
 
