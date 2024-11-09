@@ -9,6 +9,7 @@ Github: Robbin-Banx
 
 Location: Sofia, Bulgaria
 Date: 10.06.2024
+Last Modified: 09.11.2024
 
 """
 
@@ -337,7 +338,7 @@ def multiple_search_results(found_items: list):
 
     # Create indexing for found results
     for i in found_items:
-        print(numbering, i)
+        print(numbering, "|", i)
         numbering += 1
 
     while True:
