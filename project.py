@@ -9,186 +9,32 @@ Github: Robbin-Banx
 
 Location: Sofia, Bulgaria
 Date: 10.06.2024
-Last Modified: 09.11.2024
+Last Modified: 19.12.2024
 
 """
 
 import sys
 import csv
-import re
 import os
 from tabulate import tabulate
+from classes import Patient
+from configparser import ConfigParser
 
-file_name = "database.csv"
+# instantiate
+config = ConfigParser()
+
+# parse existing file
+config.read('config.ini')
+
+file_name = config.get('section a', 'database_name')
 
 
-class Patient:
-    """"
-    A class used to represent types of patients.
-
-
-    """
-
-    def __init__(
-        self, species: str = None, gender: str = None, name: str = None, age: int = None
-    ):
-        if species != None:
-            self.species = species
-        else:
-            self.species = input("What is the patient's species? ").capitalize()
-
-        if gender != None:
-            self.gender = gender
-        else:
-            self.gender = input("What is the patient male or female? ").lower()
-
-        if name != None:
-            self.name = name
-        else:
-            self.name = input("What is patient's name? ").capitalize()
-
-        if age != None:
-            self.age = age
-        else:
-            self.age = input("What's the patient's age? ")
-
-    def __str__(self):
-        return str(f"Patient is a {self.gender} {self.species}. Patient's name is {self.name} and is {self.age} years old.")
-
-    def __iter__(self):
-        yield "Species", self.species
-        yield "Gender", self.gender
-        yield "Name", self.name
-        yield "Age", self.age
-
-    def __eq__(self, other):
-        # don't attempt to compare against unrelated types
-        if not isinstance(other, Patient):
-            return NotImplemented
-
-        return (
-            self.species == other.species and
-            self.gender == other.gender and
-            self.name == other.name and
-            self.age == other.age
-        )
-
-    @property
-    def species(self):
-        return self._species
-
-    @species.setter
-    def species(self, value):
-        value = value.capitalize()
-        if value == "Dog" or value == "Cat":
-            self._species = value
-        else:
-            raise ValueError("Patient can be a dog or a cat.")
-
-    @property
-    def gender(self):
-        return self._gender
-
-    @gender.setter
-    def gender(self, value):
-        if value == "male" or value == "female":
-            self._gender = value
-        else:
-            raise ValueError("Patient must be male or female.")
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        if re.search(r"\w+", value):
-            self._name = value
-        else:
-            raise ValueError("Name must be at least one word")
-
-    @property
-    def age(self):
-        return self._age
-
-    @age.setter
-    def age(self, value):
-        if re.search(r"\d+", value):
-            self._age = value
-        else:
-            raise ValueError("Age must be a number")
-
-    def write(self, silent: bool = False):
-
-        with open(file_name, "r") as file:
-            reader = csv.DictReader(file)
-            file_keys = reader.fieldnames
-
-        keys = list(dict(self).keys())
-
-        try:
-            with open(file_name, "a", newline="") as file:
-                writer = csv.DictWriter(file, fieldnames=keys)
-                if file_keys != keys:
-                    writer.writeheader()
-                writer.writerow(
-                    {
-                        "Species": self.species,
-                        "Gender": self.gender,
-                        "Name": self.name,
-                        "Age": self.age,
-                    }
-                )
-        finally:
-            if silent == True:
-                pass
-            else:
-                print("Write successful.")
-
-    def edit(self, silent: bool = False):
-
-        if silent == False:
-            print(self)
-
-        while True:
-            match input("Do you want to edit species, gender, name or age?: ").lower():
-                case "species":
-                    if self.species == "Dog":
-                        self.species = "Cat"
-                        print("Species changed to Cat.")
-                        break
-                    elif self.species == "Cat":
-                        self.species = "Dog"
-                        print("Species changed to Dog.")
-                        break
-                case "gender":
-                    if self.gender == "male":
-                        self.gender = "female"
-                        print("Gender changed to female.")
-                        break
-                    elif self.gender == "female":
-                        self.gender = "male"
-                        print("Gender changed to male.")
-                        break
-                case "name":
-                    self.name = input("What is the new name?: ")
-                    break
-                case "age":
-                    self.age = input("What is the new age?: ")
-                    break
-                case _:
-                    print("Field not found")
-
-        if silent == False:
-            print("New description is: ", self)
-
-        return self
 
 
 def main():
     """Creates a file if one does not exist in the directory"""
     try:
-        with open(file_name, "x") as file:
+        with open(file_name, "x") as _:
             pass
     except FileExistsError:
         pass
@@ -216,15 +62,15 @@ def main():
 
         match route:
             case "read":
-                list = []
+                list_from_file = []
 
                 with open(file_name) as file:
                     reader = csv.reader(file)
                     for row in reader:
-                        list.append(row)
-                if len(list) > 0:
+                        list_from_file.append(row)
+                if len(list_from_file) > 0:
                     print(
-                        tabulate(list, headers="firstrow", showindex=False, tablefmt="grid")
+                        tabulate(list_from_file, headers="firstrow", showindex=False, tablefmt="grid")
                     )
                     break
                 else:
@@ -233,7 +79,7 @@ def main():
 
             case "search":
                 found_patient = search_base(input("Name to search: ").capitalize())
-                if (found_patient != None):
+                if found_patient is not None:
                     print(found_patient)
 
                     type_of_change = input(
@@ -252,7 +98,7 @@ def main():
                             remove_entry(found_patient)
                             break
                         case "exit":
-                            os.exit("Exiting.")
+                            sys.exit("Exiting.")
                         case _:
                             print("Input not recognized. Try again!")
                 else:
@@ -260,44 +106,77 @@ def main():
                     break
 
             case "write":
-                write()
+                create_entry()
                 break
 
             case "exit":
-                sys.exit
-                break
+                sys.exit()
 
             case _:
                 print("Invalid choice. Type 'Read', 'Write' or 'Exit'?")
                 continue
 
 
-def write():
+def write_to_database(patient, silent=False):
+    with open(file_name, "r") as file:
+        reader = csv.DictReader(file)
+        file_keys = reader.fieldnames
 
-    while True:
-        try:
-            patient = Patient()
-            break
-        except ValueError as er:
-            print(er)
-            if input("Do you want to try again? Type 'Y' or 'N'!").lower() == "y":
-                continue
-            else:
+    keys = list(dict(patient).keys())
+
+    try:
+        with open(file_name, "a", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=keys)
+
+            if file_keys != keys:
+                writer.writeheader()
+
+            writer.writerow(
+                {
+                    'Species': patient.species,
+                    'Gender': patient.gender,
+                    'Name': patient.name,
+                    'Age': patient.age
+                }
+            )
+    finally:
+        if silent:
+            pass
+        else:
+            print("Write successful.")
+
+
+def create_entry(patient=None, silent=False):
+    if patient == None:
+        while True:
+            try:
+                patient = Patient()
                 break
+            except ValueError as er:
+                print(er)
+                if input("Do you want to try again? Type 'Y' or 'N'!").lower() == "y":
+                    continue
+                else:
+                    break
 
     while True:
+        if not patient:
+            break
+        if silent == True:
+            write_to_database(patient, silent=True)
+            break
         print(patient)
         confirmation = input(
             "Review data. Commit to database? Type 'Y' or 'N'! "
         ).lower()
 
         if confirmation == "y":
-            patient.write()
+            write_to_database(patient)
             break
         elif confirmation == "n":
             patient.edit(silent = True)
         elif input("Exit program?Type 'Y' or 'N'! ").lower() == "y":
-            sys.exit
+            sys.exit()
         else:
             continue
 
@@ -338,7 +217,7 @@ def multiple_search_results(found_items: list):
 
     # Create indexing for found results
     for i in found_items:
-        print(numbering, "|", i)
+        print(f'{numbering}, "|", {i}')
         numbering += 1
 
     while True:
@@ -351,7 +230,7 @@ def multiple_search_results(found_items: list):
             print("Please input an integer")
 
     user_input = user_input-1
-    return (found_items[user_input])
+    return found_items[user_input]
 
 def edit_entry(patient):
 
@@ -375,14 +254,14 @@ def edit_entry(patient):
                 if test_patient == old_patient:
 
                     try:
-                        new_patient.write(silent=True)
-                        print("Patient editted")
+                        create_entry(new_patient, silent=True)
+                        print("Patient editted.")
                     except TypeError:
-                        test_patient.write(silent=True)
+                        create_entry(test_patient, silent=True)
                         print("An error occured. No changes were made.")
 
                 else:
-                    test_patient.write(silent=True)
+                    create_entry(test_patient, silent=True)
 
         os.remove("database_old.csv")
 
@@ -414,7 +293,7 @@ def remove_entry(patient):
                     pass
 
                 else:
-                    test_patient.write(silent=True)
+                    write_to_database(test_patient, silent=True)
 
     except FileNotFoundError:
         print("File not found:", file_name)
