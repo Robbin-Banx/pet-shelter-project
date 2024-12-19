@@ -1,8 +1,8 @@
-from project import Patient
+import pytest
+from classes import Patient
 from project import search_base
 from project import file_name
 import csv
-import pytest
 
 def test_Patient_ValueError_for_species():
 
