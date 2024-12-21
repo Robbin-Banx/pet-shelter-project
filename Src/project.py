@@ -20,21 +20,24 @@ from tabulate import tabulate
 from classes import Patient
 from configparser import ConfigParser
 
-# instantiate
+# Instantiate
 config = ConfigParser()
 
-# parse existing file
-config.read('config.ini')
+# Construct the path to config.ini
+config_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Config', 'config.ini')
 
-file_name = config.get('section a', 'database_name')
+# Parse existing file
+config.read(config_file_path)
 
-
-
+# Get database name from config file
+database_name = config.get('section a', 'database_name')
+database_folder = config.get('section a', 'database_folder')
+database = os.path.join(os.path.dirname(os.path.dirname(__file__)), database_folder, database_name)
 
 def main():
     """Creates a file if one does not exist in the directory"""
     try:
-        with open(file_name, "x") as _:
+        with open(database, "x") as _:
             pass
     except FileExistsError:
         pass
@@ -64,7 +67,7 @@ def main():
             case "read":
                 list_from_file = []
 
-                with open(file_name) as file:
+                with open(database) as file:
                     reader = csv.reader(file)
                     for row in reader:
                         list_from_file.append(row)
@@ -118,14 +121,14 @@ def main():
 
 
 def write_to_database(patient, silent=False):
-    with open(file_name, "r") as file:
+    with open(database, "r") as file:
         reader = csv.DictReader(file)
         file_keys = reader.fieldnames
 
     keys = list(dict(patient).keys())
 
     try:
-        with open(file_name, "a", newline="") as file:
+        with open(database, "a", newline="") as file:
             writer = csv.DictWriter(file, fieldnames=keys)
 
             if file_keys != keys:
@@ -185,7 +188,7 @@ def search_base(search_condition):
     found_items: list = []
 
     try:
-        with open(file_name, "r") as file:
+        with open(database, "r") as file:
             reader = csv.DictReader(file)
             for row in reader:
                 name = row.get("Name")
@@ -198,7 +201,7 @@ def search_base(search_condition):
                     continue
 
     except FileNotFoundError:
-        print("File not found:", file_name)
+        print("File not found:", database)
     except Exception as ex:
         print("An error occurred:", ex)
 
@@ -237,8 +240,8 @@ def edit_entry(patient):
     old_patient = Patient(patient.species, patient.gender, patient.name, patient.age)
     new_patient = patient.edit()
 
-    os.rename(file_name, "database_old.csv")
-    with open(file_name, "x") as _:
+    os.rename(database, "database_old.csv")
+    with open(database, "x") as _:
         pass
 
     try:
@@ -266,15 +269,15 @@ def edit_entry(patient):
         os.remove("database_old.csv")
 
     except FileNotFoundError:
-        print("File not found:", file_name)
+        print("File not found:", database)
     except Exception as ex:
         print("An error occurred:", ex)
-        os.rename("database_old.csv", file_name)
+        os.rename("database_old.csv", database)
 
 def remove_entry(patient):
     # Rename database to database_old and create a new database file
-    os.rename(file_name, "database_old.csv")
-    with open(file_name, "x") as _:
+    os.rename(database, "database_old.csv")
+    with open(database, "x") as _:
         pass
 
     try:
@@ -296,7 +299,7 @@ def remove_entry(patient):
                     write_to_database(test_patient, silent=True)
 
     except FileNotFoundError:
-        print("File not found:", file_name)
+        print("File not found:", database)
     except Exception as ex:
         print("An error occurred:", ex)
     # Remove the old database
