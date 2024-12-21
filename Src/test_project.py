@@ -1,7 +1,7 @@
 import pytest
 from classes import Patient
 from project import search_base
-from project import file_name
+from project import database
 import csv
 
 def test_Patient_ValueError_for_species():
