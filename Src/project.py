@@ -277,7 +277,8 @@ def edit_entry(patient):
         print("An error occurred:", ex)
         os.rename("database_old.csv", database)
 
-def remove_entry(patient):
+
+def remove_entry(patient, silent=False):
     # Rename database to database_old and create a new database file
     os.rename(database, "database_old.csv")
     with open(database, "x") as _:
@@ -295,7 +296,8 @@ def remove_entry(patient):
                 test_patient = Patient(species, gender, name, age)
 
                 if test_patient == patient:
-                    print("Patient removed")
+                    if silent == False:
+                        print("Patient removed")
                     pass
 
                 else:

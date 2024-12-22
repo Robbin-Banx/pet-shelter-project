@@ -1,6 +1,8 @@
 import pytest
 from classes import Patient
+from project import create_entry
 from project import search_base
+from project import remove_entry
 from project import database
 import csv
 
@@ -42,3 +44,35 @@ def test_Patient_eq_True():
     test_patient_1=Patient("dog", "male", "Harry", "4")
     test_patient_2=Patient("dog", "male", "Harry", "4")
     assert (test_patient_1 == test_patient_2) == True
+
+
+def test_create_entry():
+    test_patient_1 = Patient("cat", "male", "Ronald", "4")
+    create_entry(test_patient_1, silent=True)
+    subjects = []
+    with open(database, 'r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            species = row.get("Species")
+            gender = row.get("Gender")
+            name = row.get("Name")
+            age = row.get("Age")
+            test_patient = Patient(species, gender, name, age)
+            subjects.append(test_patient)
+    assert test_patient_1 in subjects
+
+
+def test_remove_entry():
+    test_patient_1 = Patient("cat", "male", "Ronald", "4")
+    remove_entry(test_patient_1, silent=True)
+    subjects = []
+    with open(database, 'r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            species = row.get("Species")
+            gender = row.get("Gender")
+            name = row.get("Name")
+            age = row.get("Age")
+            test_patient = Patient(species, gender, name, age)
+            subjects.append(test_patient)
+    assert test_patient_1 not in subjects
