@@ -2,7 +2,10 @@
 Pet Shelter Registry
 =====================
 
-This file is a basic program to keep track of the patients of a pet shelter. This is a final project for the CS50P course, led by David A. Malan.
+This file is a basic program to keep track of the patients of a pet shelter.
+This started as a final project for the CS50P course, led by David A. Malan.
+The project was successfully submitted to CS50P on 10.06.2024.
+Currently it's developed for research purposes.
 
 Author: Aleksandar Kostadinov
 Github: Robbin-Banx
