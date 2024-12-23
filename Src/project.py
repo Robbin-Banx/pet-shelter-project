@@ -16,6 +16,7 @@ Last Modified: 19.12.2024
 import sys
 import csv
 import os
+import sqlite3
 from tabulate import tabulate
 from classes import Patient
 from configparser import ConfigParser
@@ -31,18 +32,33 @@ config.read(config_file_path)
 
 # Get database name from config file
 database_name = config.get('section a', 'database_name')
+database_extention = config.get('section a', 'database_extention')
 database_folder = config.get('section a', 'database_folder')
-database = os.path.join(os.path.dirname(os.path.dirname(__file__)), database_folder, database_name)
+
+database_name_ext = database_name + '.' + database_extention
+
+database = os.path.join(os.path.dirname(os.path.dirname(__file__)), database_folder, database_name_ext)
 
 def main():
     """Creates a file if one does not exist in the directory"""
+
     try:
-        with open(database, "x") as _:
-            pass
+        conn = sqlite3.connect(database)
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS my_table (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        column1 TEXT,
+        column2 TEXT,
+        column3 TEXT,
+        column4 INTEGER
+        )''')
+        conn.commit()
     except FileExistsError:
         pass
 
+
     """If command line arguments are preset execute them, if not prompts user for action, executes selected action"""
+
     while True:
 
         if len(sys.argv) == 2:
