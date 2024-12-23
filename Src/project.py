@@ -155,7 +155,7 @@ def write_to_database(patient, silent=False):
 
     try:
         with open(database, "a", newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=keys)
+            writer = csv.DictWriter( file, fieldnames=keys)
 
             if file_keys != keys:
                 writer.writeheader()
