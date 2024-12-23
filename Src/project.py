@@ -42,18 +42,20 @@ database_name_ext = database_name + '.' + database_extention
 
 database = os.path.join(os.path.dirname(os.path.dirname(__file__)), database_folder, database_name_ext)
 
+patients_table = 'patients'
+
 def main():
     """Creates a file if one does not exist in the directory"""
 
     try:
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS my_table (
+        cursor.execute(f'''CREATE TABLE IF NOT EXISTS {patients_table} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        column1 TEXT,
-        column2 TEXT,
-        column3 TEXT,
-        column4 INTEGER
+        species TEXT,
+        gender TEXT,
+        name TEXT,
+        age INTEGER
         )''')
         conn.commit()
     except FileExistsError:
@@ -86,18 +88,23 @@ def main():
             case "read":
                 list_from_file = []
 
-                with open(database) as file:
-                    reader = csv.reader(file)
-                    for row in reader:
-                        list_from_file.append(row)
-                if len(list_from_file) > 0:
-                    print(
-                        tabulate(list_from_file, headers="firstrow", showindex=False, tablefmt="grid")
-                    )
-                    break
-                else:
-                    print("The database is empty")
-                    break
+                with sqlite3.connect(database) as conn:
+                    cursor = conn.cursor()
+
+                    # Retrieve all data from the table
+                    cursor.execute(f"SELECT * FROM {patients_table}")
+                    rows = cursor.fetchall()
+
+                    if rows:
+                        # Fetch column names from the table
+                        cursor.execute(f"PRAGMA table_info({patients_table})")
+                        column_info = cursor.fetchall()
+                        headers = [col[1] for col in column_info]  # Column names are in the second field
+
+                        # Print the table
+                        print(tabulate(rows, headers=headers, showindex=False, tablefmt="grid"))
+                    else:
+                        print("The database is empty")
 
             case "search":
                 found_patient = search_base(input("Name to search: ").capitalize())
