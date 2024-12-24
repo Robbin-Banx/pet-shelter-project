@@ -108,7 +108,7 @@ def main():
             case "search":
                 found_patient = search_base(input("Name to search: ").capitalize())
                 if found_patient is not None:
-                    print(found_patient)
+                    print(found_patient.values())
 
                     type_of_change = input(
                         "Do you want to edit or remove patient? Type 'edit', 'remove' or 'exit'! : ").lower()
@@ -203,7 +203,7 @@ def create_entry(patient=None, silent=False):
 
 
 def search_base(search_condition):
-    found_items = []
+    found_items = {}
     # Define your search criteria (e.g., column1 = "value1")
     search_column = "name"
 
@@ -216,14 +216,14 @@ def search_base(search_condition):
         rows = cursor.fetchall()
 
         for i in rows:
-            found_items.append(Patient(i[1], i[2], i[3], i[4]))
+            found_items [i[0]] = Patient(i[1], i[2], i[3], i[4])
 
     # Return search result
     if len(found_items) == 0:
         return None
     elif len(found_items) == 1:
         print("Search Successful")
-        return found_items[0]
+        return found_items
     elif len(found_items) > 1:
         return multiple_search_results(found_items)
 
