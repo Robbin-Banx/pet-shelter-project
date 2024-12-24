@@ -93,7 +93,7 @@ class Patient:
 
     @age.setter
     def age(self, value):
-        if re.search(r"\d+", value):
+        if int(value):
             self._age = value
         else:
             raise ValueError("Age must be a number")

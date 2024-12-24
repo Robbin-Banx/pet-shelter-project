@@ -5,10 +5,10 @@ Pet Shelter Registry
 This file is a basic program to keep track of the patients of a pet shelter.
 This started as a final project for the CS50P course, led by David A. Malan.
 The project was successfully submitted to CS50P on 10.06.2024.
-Currently it's developed for research purposes.
+Currently, it's developed for research purposes.
 
 Author: Aleksandar Kostadinov
-Github: Robbin-Banx
+GitHub: Robbin-Banx
 
 Location: Sofia, Bulgaria
 Date: 10.06.2024
@@ -35,10 +35,10 @@ config.read(config_file_path)
 
 # Get database name from config file
 database_name = config.get('section a', 'database_name')
-database_extention = config.get('section a', 'database_extention')
+database_extension = config.get('section a', 'database_extension')
 database_folder = config.get('section a', 'database_folder')
 
-database_name_ext = database_name + '.' + database_extention
+database_name_ext = database_name + '.' + database_extension
 
 database = os.path.join(os.path.dirname(os.path.dirname(__file__)), database_folder, database_name_ext)
 
@@ -86,7 +86,6 @@ def main():
 
         match route:
             case "read":
-                list_from_file = []
 
                 with sqlite3.connect(database) as conn:
                     cursor = conn.cursor()
@@ -142,41 +141,34 @@ def main():
                 sys.exit()
 
             case _:
-                print("Invalid choice. Type 'Read', 'Write' or 'Exit'?")
+                print("Invalid choice. Type 'Read', 'Search', 'Write' or 'Exit'?")
                 continue
 
 
-def write_to_database(patient, silent=False):
-    with open(database, "r") as file:
-        reader = csv.DictReader(file)
-        file_keys = reader.fieldnames
+def write_to_database(patient: Patient, silent: bool = False) -> None:
+    # Replace these with the actual column names and values
+    new_entry = {
+        "species": patient.species,
+        "gender": patient.gender,
+        "name": patient.name,
+        "age": patient.age
+    }
 
-    keys = list(dict(patient).keys())
+    # Build the SQL query dynamically
+    columns = ", ".join(new_entry.keys())
+    placeholders = ", ".join(["?"] * len(new_entry))
+    values = tuple(new_entry.values())
 
-    try:
-        with open(database, "a", newline="") as file:
-            writer = csv.DictWriter( file, fieldnames=keys)
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"INSERT INTO {patients_table} ({columns}) VALUES ({placeholders})", values)
+        conn.commit()
 
-            if file_keys != keys:
-                writer.writeheader()
-
-            writer.writerow(
-                {
-                    'Species': patient.species,
-                    'Gender': patient.gender,
-                    'Name': patient.name,
-                    'Age': patient.age
-                }
-            )
-    finally:
-        if silent:
-            pass
-        else:
-            print("Write successful.")
-
+    if not silent:
+        print("Write successful.")
 
 def create_entry(patient=None, silent=False):
-    if patient == None:
+    if patient is None:
         while True:
             try:
                 patient = Patient()
@@ -191,7 +183,7 @@ def create_entry(patient=None, silent=False):
     while True:
         if not patient:
             break
-        if silent == True:
+        if silent:
             write_to_database(patient, silent=True)
             break
         print(patient)
@@ -211,26 +203,22 @@ def create_entry(patient=None, silent=False):
 
 
 def search_base(search_condition):
-    found_items: list = []
+    found_items = []
+    # Define your search criteria (e.g., column1 = "value1")
+    search_column = "name"
 
-    try:
-        with open(database, "r") as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                name = row.get("Name")
-                if search_condition == name:
-                    species = row.get("Species")
-                    gender = row.get("Gender")
-                    age = row.get("Age")
-                    found_items.append(Patient(species, gender, name, age))
-                else:
-                    continue
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
 
-    except FileNotFoundError:
-        print("File not found:", database)
-    except Exception as ex:
-        print("An error occurred:", ex)
+        # Perform the search
+        query = f"SELECT * FROM {patients_table} WHERE {search_column} = ?"
+        cursor.execute(query, (search_condition,))
+        rows = cursor.fetchall()
 
+        for i in rows:
+            found_items.append(Patient(i[1], i[2], i[3], i[4]))
+
+    # Return search result
     if len(found_items) == 0:
         return None
     elif len(found_items) == 1:
@@ -238,7 +226,6 @@ def search_base(search_condition):
         return found_items[0]
     elif len(found_items) > 1:
         return multiple_search_results(found_items)
-
 
 def multiple_search_results(found_items: list):
     # Handle cases where there are multiple found items from the search function
@@ -266,10 +253,31 @@ def edit_entry(patient):
     old_patient = Patient(patient.species, patient.gender, patient.name, patient.age)
     new_patient = patient.edit()
 
-    os.rename(database, "database_old.csv")
-    with open(database, "x") as _:
-        pass
+    # Define the criteria for identifying the row to update
+    search_column = "id"  # The column used to find the specific row
+    search_value = 1  # The value to search for in the column
 
+    # Define the new values for the columns to update
+    updated_data = {
+        "column1": "new_value1",  # Replace with the actual column names and new values
+        "column2": 999,
+        "column3": 12.34
+    }
+
+    # Build the SET clause dynamically
+    set_clause = ", ".join([f"{col} = ?" for col in updated_data.keys()])
+    values = list(updated_data.values()) + [search_value]  # Add the search value to the parameters
+
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+
+        # Update the row in the table
+        query = f"UPDATE {patients_table} SET {set_clause} WHERE {search_column} = ?"
+        cursor.execute(query, values)
+        conn.commit()
+
+        print("Row updated successfully!")
+'''
     try:
         with open("database_old.csv", "r") as file:
             reader = csv.DictReader(file)
@@ -284,10 +292,10 @@ def edit_entry(patient):
 
                     try:
                         create_entry(new_patient, silent=True)
-                        print("Patient editted.")
+                        print("Patient edited.")
                     except TypeError:
                         create_entry(test_patient, silent=True)
-                        print("An error occured. No changes were made.")
+                        print("An error occurred. No changes were made.")
 
                 else:
                     create_entry(test_patient, silent=True)
@@ -300,7 +308,7 @@ def edit_entry(patient):
         print("An error occurred:", ex)
         os.rename("database_old.csv", database)
 
-
+'''
 def remove_entry(patient, silent=False):
     # Rename database to database_old and create a new database file
     os.rename(database, "database_old.csv")
@@ -319,7 +327,7 @@ def remove_entry(patient, silent=False):
                 test_patient = Patient(species, gender, name, age)
 
                 if test_patient == patient:
-                    if silent == False:
+                    if not silent:
                         print("Patient removed")
                     pass
 
