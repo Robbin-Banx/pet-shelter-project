@@ -204,6 +204,7 @@ def create_entry(patient=None, silent=False):
 
 def search_base(search_condition):
     found_items = []
+
     # Define your search criteria (e.g., column1 = "value1")
     search_column = "name"
 
@@ -216,7 +217,7 @@ def search_base(search_condition):
         rows = cursor.fetchall()
 
         for i in rows:
-            found_items.append(Patient(i[1], i[2], i[3], i[4]))
+            found_items.append(Patient(species=i[1], gender=i[2], name=i[3], age=i[4], id=i[0]))
 
     # Return search result
     if len(found_items) == 0:
@@ -250,18 +251,18 @@ def multiple_search_results(found_items: list):
 
 def edit_entry(patient):
 
-    old_patient = Patient(patient.species, patient.gender, patient.name, patient.age)
     new_patient = patient.edit()
 
     # Define the criteria for identifying the row to update
     search_column = "id"  # The column used to find the specific row
-    search_value = 1  # The value to search for in the column
+    search_value = patient.id  # The value to search for in the column
 
     # Define the new values for the columns to update
     updated_data = {
-        "column1": "new_value1",  # Replace with the actual column names and new values
-        "column2": 999,
-        "column3": 12.34
+        "species": new_patient.species,  # Replace with the actual column names and new values
+        "gender": new_patient.gender,
+        "name": new_patient.name,
+        "age": new_patient.age
     }
 
     # Build the SET clause dynamically
@@ -277,70 +278,21 @@ def edit_entry(patient):
         conn.commit()
 
         print("Row updated successfully!")
-'''
-    try:
-        with open("database_old.csv", "r") as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                species = row.get("Species")
-                gender = row.get("Gender")
-                name = row.get("Name")
-                age = row.get("Age")
-                test_patient = Patient(species, gender, name, age)
 
-                if test_patient == old_patient:
-
-                    try:
-                        create_entry(new_patient, silent=True)
-                        print("Patient edited.")
-                    except TypeError:
-                        create_entry(test_patient, silent=True)
-                        print("An error occurred. No changes were made.")
-
-                else:
-                    create_entry(test_patient, silent=True)
-
-        os.remove("database_old.csv")
-
-    except FileNotFoundError:
-        print("File not found:", database)
-    except Exception as ex:
-        print("An error occurred:", ex)
-        os.rename("database_old.csv", database)
-
-'''
 def remove_entry(patient, silent=False):
-    # Rename database to database_old and create a new database file
-    os.rename(database, "database_old.csv")
-    with open(database, "x") as _:
-        pass
+    delete_column = "id"  # The column used to find the specific row
+    delete_value = patient.idsearch  # The value to match for deletion
 
-    try:
-        with open("database_old.csv", "r") as file:
-            reader = csv.DictReader(file)
-            # Copy each patient except the one that is passed in
-            for row in reader:
-                species = row.get("Species")
-                gender = row.get("Gender")
-                name = row.get("Name")
-                age = row.get("Age")
-                test_patient = Patient(species, gender, name, age)
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
 
-                if test_patient == patient:
-                    if not silent:
-                        print("Patient removed")
-                    pass
+        # Delete the row from the table
+        query = f"DELETE FROM {patients_table} WHERE {delete_column} = ?"
+        cursor.execute(query, (delete_value,))
+        conn.commit()
 
-                else:
-                    write_to_database(test_patient, silent=True)
-
-    except FileNotFoundError:
-        print("File not found:", database)
-    except Exception as ex:
-        print("An error occurred:", ex)
-    # Remove the old database
-    os.remove("database_old.csv")
-
+    if not silent:
+        print("Patient removed")
 
 if __name__ == "__main__":
     main()
