@@ -17,7 +17,6 @@ Last Modified: 19.12.2024
 """
 
 import sys
-import csv
 import os
 import sqlite3
 from tabulate import tabulate
@@ -28,21 +27,26 @@ from configparser import ConfigParser
 config = ConfigParser()
 
 # Construct the path to config.ini
-config_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Config', 'config.ini')
+config_file_path = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "Config", "config.ini"
+)
 
 # Parse existing file
 config.read(config_file_path)
 
 # Get database name from config file
-database_name = config.get('section a', 'database_name')
-database_extension = config.get('section a', 'database_extension')
-database_folder = config.get('section a', 'database_folder')
+database_name = config.get("section a", "database_name")
+database_extension = config.get("section a", "database_extension")
+database_folder = config.get("section a", "database_folder")
 
-database_name_ext = database_name + '.' + database_extension
+database_name_ext = database_name + "." + database_extension
 
-database = os.path.join(os.path.dirname(os.path.dirname(__file__)), database_folder, database_name_ext)
+database = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), database_folder, database_name_ext
+)
 
-patients_table = 'patients'
+patients_table = "patients"
+
 
 def main():
     """Creates a file if one does not exist in the directory"""
@@ -50,17 +54,18 @@ def main():
     try:
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
-        cursor.execute(f'''CREATE TABLE IF NOT EXISTS {patients_table} (
+        cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {patients_table} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         species TEXT,
         gender TEXT,
         name TEXT,
         age INTEGER
-        )''')
+        )"""
+        )
         conn.commit()
     except FileExistsError:
         pass
-
 
     """If command line arguments are preset execute them, if not prompts user for action, executes selected action"""
 
@@ -98,10 +103,16 @@ def main():
                         # Fetch column names from the table
                         cursor.execute(f"PRAGMA table_info({patients_table})")
                         column_info = cursor.fetchall()
-                        headers = [col[1] for col in column_info]  # Column names are in the second field
+                        headers = [
+                            col[1] for col in column_info
+                        ]  # Column names are in the second field
 
                         # Print the table
-                        print(tabulate(rows, headers=headers, showindex=False, tablefmt="grid"))
+                        print(
+                            tabulate(
+                                rows, headers=headers, showindex=False, tablefmt="grid"
+                            )
+                        )
                     else:
                         print("The database is empty")
 
@@ -111,7 +122,8 @@ def main():
                     print(found_patient)
 
                     type_of_change = input(
-                        "Do you want to edit or remove patient? Type 'edit', 'remove' or 'exit'! : ").lower()
+                        "Do you want to edit or remove patient? Type 'edit', 'remove' or 'exit'! : "
+                    ).lower()
 
                     match type_of_change:
 
@@ -151,7 +163,7 @@ def write_to_database(patient: Patient, silent: bool = False) -> None:
         "species": patient.species,
         "gender": patient.gender,
         "name": patient.name,
-        "age": patient.age
+        "age": patient.age,
     }
 
     # Build the SQL query dynamically
@@ -161,11 +173,14 @@ def write_to_database(patient: Patient, silent: bool = False) -> None:
 
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute(f"INSERT INTO {patients_table} ({columns}) VALUES ({placeholders})", values)
+        cursor.execute(
+            f"INSERT INTO {patients_table} ({columns}) VALUES ({placeholders})", values
+        )
         conn.commit()
 
     if not silent:
         print("Write successful.")
+
 
 def create_entry():
 
@@ -190,11 +205,12 @@ def create_entry():
             write_to_database(patient)
             break
         elif confirmation == "n":
-            patient.edit(silent = True)
+            patient.edit(silent=True)
         elif input("Exit program?Type 'Y' or 'N'! ").lower() == "y":
             sys.exit()
         else:
             continue
+
 
 def search_base(search_condition):
     found_items = []
@@ -211,7 +227,9 @@ def search_base(search_condition):
         rows = cursor.fetchall()
 
         for i in rows:
-            found_items.append(Patient(species=i[1], gender=i[2], name=i[3], age=i[4], id=i[0]))
+            found_items.append(
+                Patient(species=i[1], gender=i[2], name=i[3], age=i[4], id=i[0])
+            )
 
     # Return search result
     if len(found_items) == 0:
@@ -221,6 +239,7 @@ def search_base(search_condition):
         return found_items[0]
     elif len(found_items) > 1:
         return multiple_search_results(found_items)
+
 
 def multiple_search_results(found_items: list):
     # Handle cases where there are multiple found items from the search function
@@ -235,13 +254,17 @@ def multiple_search_results(found_items: list):
         # Ask user which match is the correct one
         try:
             user_input = int(
-                input("Which patient is the one you are looking for? Type the index number: "))
+                input(
+                    "Which patient is the one you are looking for? Type the index number: "
+                )
+            )
             break
         except ValueError:
             print("Please input an integer")
 
-    user_input = user_input-1
+    user_input = user_input - 1
     return found_items[user_input]
+
 
 def edit_entry(patient):
 
@@ -256,12 +279,14 @@ def edit_entry(patient):
         "species": new_patient.species,  # Replace with the actual column names and new values
         "gender": new_patient.gender,
         "name": new_patient.name,
-        "age": new_patient.age
+        "age": new_patient.age,
     }
 
     # Build the SET clause dynamically
     set_clause = ", ".join([f"{col} = ?" for col in updated_data.keys()])
-    values = list(updated_data.values()) + [search_value]  # Add the search value to the parameters
+    values = list(updated_data.values()) + [
+        search_value
+    ]  # Add the search value to the parameters
 
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
@@ -273,9 +298,10 @@ def edit_entry(patient):
 
         print("Row updated successfully!")
 
-def remove_entry(patient, silent:bool = False):
+
+def remove_entry(patient, silent: bool = False):
     delete_column = "id"  # The column used to find the specific row
-    delete_value = patient.id # The value to match for deletion
+    delete_value = patient.id  # The value to match for deletion
 
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
@@ -287,6 +313,7 @@ def remove_entry(patient, silent:bool = False):
 
     if not silent:
         print("Patient removed")
+
 
 if __name__ == "__main__":
     main()
