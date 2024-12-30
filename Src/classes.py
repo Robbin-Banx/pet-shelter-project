@@ -9,7 +9,7 @@ class Patient:
     """
 
     def __init__(
-            self, species: str = None, gender: str = None, name: str = None, age: int = None
+            self, species: str = None, gender: str = None, name: str = None, age: int = None, id: int = None
     ):
         if species != None:
             self.species = species
@@ -30,6 +30,11 @@ class Patient:
             self.age = age
         else:
             self.age = input("What's the patient's age? ")
+
+        if id != None:
+            self.id = id
+        else:
+            self.id = None
 
     def __str__(self):
         return str(
@@ -52,6 +57,17 @@ class Patient:
                 self.name == other.name and
                 self.age == other.age
         )
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        if type(value) == int:
+            self._id = value
+        else:
+            self._id = None
 
     @property
     def species(self):
@@ -93,7 +109,7 @@ class Patient:
 
     @age.setter
     def age(self, value):
-        if re.search(r"\d+", value):
+        if int(value):
             self._age = value
         else:
             raise ValueError("Age must be a number")
