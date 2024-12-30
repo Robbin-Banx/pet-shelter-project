@@ -167,25 +167,20 @@ def write_to_database(patient: Patient, silent: bool = False) -> None:
     if not silent:
         print("Write successful.")
 
-def create_entry(patient=None, silent=False):
-    if patient is None:
-        while True:
-            try:
-                patient = Patient()
-                break
-            except ValueError as er:
-                print(er)
-                if input("Do you want to try again? Type 'Y' or 'N'!").lower() == "y":
-                    continue
-                else:
-                    break
+def create_entry():
 
     while True:
-        if not patient:
+        try:
+            patient = Patient()
             break
-        if silent:
-            write_to_database(patient, silent=True)
-            break
+        except ValueError as er:
+            print(er)
+            if input("Do you want to try again? Type 'Y' or 'N'!").lower() == "y":
+                continue
+            else:
+                break
+
+    while True:
         print(patient)
         confirmation = input(
             "Review data. Commit to database? Type 'Y' or 'N'! "
@@ -200,7 +195,6 @@ def create_entry(patient=None, silent=False):
             sys.exit()
         else:
             continue
-
 
 def search_base(search_condition):
     found_items = []
@@ -279,9 +273,9 @@ def edit_entry(patient):
 
         print("Row updated successfully!")
 
-def remove_entry(patient, silent=False):
+def remove_entry(patient, silent:bool = False):
     delete_column = "id"  # The column used to find the specific row
-    delete_value = patient.idsearch  # The value to match for deletion
+    delete_value = patient.id # The value to match for deletion
 
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
