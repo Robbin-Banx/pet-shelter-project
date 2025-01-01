@@ -1,10 +1,12 @@
 import pytest
 from classes import Patient
-from project import create_entry
+from project import write_to_database
 from project import search_base
 from project import remove_entry
 from project import database
+from project import patients_table
 import csv
+import sqlite3
 
 def test_Patient_ValueError_for_species():
 
@@ -46,33 +48,47 @@ def test_Patient_eq_True():
     assert (test_patient_1 == test_patient_2) == True
 
 
-def test_create_entry():
+def test_write_to_database():
     test_patient_1 = Patient("cat", "male", "Ronald", "4")
-    create_entry(test_patient_1, silent=True)
+    write_to_database(test_patient_1)
     subjects = []
-    with open(database, 'r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            species = row.get("Species")
-            gender = row.get("Gender")
-            name = row.get("Name")
-            age = row.get("Age")
-            test_patient = Patient(species, gender, name, age)
-            subjects.append(test_patient)
-    assert test_patient_1 in subjects
 
+    # Define your search criteria (e.g., column1 = "value1")
+    search_column = "name"
+
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+
+        # Perform the search
+        query = f"SELECT * FROM {patients_table} WHERE {search_column} = ?"
+        cursor.execute(query, (test_patient_1.name,))
+        rows = cursor.fetchall()
+
+        for i in rows:
+            subjects.append(
+                Patient(species=i[1], gender=i[2], name=i[3], age=i[4], id=i[0])
+            )
+        assert test_patient_1 not in subjects
 
 def test_remove_entry():
     test_patient_1 = Patient("cat", "male", "Ronald", "4")
     remove_entry(test_patient_1, silent=True)
     subjects = []
-    with open(database, 'r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            species = row.get("Species")
-            gender = row.get("Gender")
-            name = row.get("Name")
-            age = row.get("Age")
-            test_patient = Patient(species, gender, name, age)
-            subjects.append(test_patient)
+
+    # Define your search criteria (e.g., column1 = "value1")
+    search_column = "name"
+
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+
+        # Perform the search
+        query = f"SELECT * FROM {patients_table} WHERE {search_column} = ?"
+        cursor.execute(query, (test_patient_1.name,))
+        rows = cursor.fetchall()
+
+        for i in rows:
+            subjects.append(
+                Patient(species=i[1], gender=i[2], name=i[3], age=i[4], id=i[0])
+            )
+
     assert test_patient_1 not in subjects

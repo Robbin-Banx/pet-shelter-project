@@ -187,14 +187,13 @@ def create_entry():
     while True:
         try:
             patient = Patient()
-            break
         except ValueError as er:
             print(er)
             if input("Do you want to try again? Type 'Y' or 'N'!").lower() == "y":
                 continue
             else:
                 break
-
+        break
     while True:
         print(patient)
         confirmation = input(
