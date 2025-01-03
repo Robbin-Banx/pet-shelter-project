@@ -68,7 +68,7 @@ def test_write_to_database():
             subjects.append(
                 Patient(species=i[1], gender=i[2], name=i[3], age=i[4], id=i[0])
             )
-        assert test_patient_1 not in subjects
+        assert test_patient_1 in subjects
 
 def test_remove_entry():
     test_patient_1 = Patient("cat", "male", "Ronald", "4")
